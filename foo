@@ -1,0 +1,71 @@
+/* This sets up the Programmable Interrupt Controller.
+ * An interrupt is a number that is sent to the CPU, which says that something
+ * has happened.  Software interrupts are just numbers, but hardware
+ * interrupts are signals sent through an Interrupt Request Line (IRQ).  Now,
+ * the IRQ's are normally mapped to interrupts 8-15 and 70-77.  Now, in
+ * Protected Mode, the first 16 interrupts are taken up by software
+ * exceptions, so we have to move the first 8 IRQ's to signal different
+ * interrupts.  This is what this does.
+ * Note that there are a total of two PIC's, one for the first 8 IRQ's and one
+ * for the second 8.
+ *
+ * Simon Heath
+ * 15/6/2003
+ */
+
+#include "pic.h"
+
+// These are the port numbers of the PIC's
+#define PIC1 0x20
+#define PIC2 0xA0
+
+
+// To map out the PIC's we have to send a total of four signals called ICW's
+// (Interrupt Control Words).  The first one tell 'em to recieve signals, the
+// second one tells them which interrupts to map the IRQ's to, the third one
+// is just magic, as far as I can tell (I think it has something to do with
+// how the PIC's are chained together), and the fourth tells it to wrap it up;
+// show's over.
+// This is the magic number for the first ICW
+#define ICW1 0x11
+// These are the interrupt numbers we want to map the IRQ's to.
+// I shall use 0x20 and 0x28, though anything ABOVE 0x10 and below 0xFF should
+// work fine.
+#define IRQA 0x20
+#define IRQB 0x28
+// This is the wrap-up signal
+#define ICW4 0x01
+
+
+// And this is the function that does all the stuff.
+void initPics()
+{
+   char a1, a2;
+
+   a1 = inb( PIC1 + 1 );
+   a2 = inb( PIC2 + 1 );
+
+   // Send ICW1
+   outb( ICW1, PIC1 );
+   outb( ICW1, PIC2 );
+
+   // Send ICW2
+   outb( IRQA, PIC1 + 1 );
+   outb( IRQB, PIC2 + 1 );
+
+   // Send ICW3 --this is magic, or so it looks to me.  I wish someone could
+   // explain this stuff simply.
+   outb( 4, PIC1 + 1 );
+   outb( 2, PIC2 + 1 );
+
+   // Send ICW4
+   outb( ICW4, PIC1 + 1 );
+   outb( ICW4, PIC2 + 1 );
+
+   // Reset attributes
+   outb( a1, PIC1 + 1 );
+   outb( a2, PIC2 + 1 );
+
+   sbPrintln( "PIC init'd.", LOWLEVEL_TXT );
+   sbPrintln( "IRQ's mapped to 0x20-0x30.", LOWLEVEL_TXT );
+}

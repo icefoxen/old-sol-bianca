@@ -1,0 +1,13 @@
+#!/bin/sh
+# nasm can't take multiple files as an arg.  Damn.
+
+ASM=nasm
+CC=gcc
+
+echo Assembling
+$ASM -f elf sb-init.asm
+$ASM -f elf isra.asm
+
+echo Compiling C
+$CC -m32 -c -I./include *.c
+$CC -m32 -c -I./include lib/*.c

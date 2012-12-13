@@ -1,0 +1,6 @@
+#!/bin/sh
+rm -rf *~
+rm -rf *.o
+rm -rf lib/*~
+rm -rf lib/*.o
+rm -rf include/*~
